@@ -1,0 +1,138 @@
+<html>
+  <head>
+    <!-- Styles -->
+    <style>
+      #chartdiv {
+      	width	: 100%;
+      	height	: 500px;
+      }
+    </style>
+
+    <!-- Resources -->
+    <script src="amcharts_3.20.12.free/amcharts/amcharts.js"></script>
+    <script src="amcharts_3.20.12.free/amcharts/serial.js"></script>
+    <script src="amcharts_3.20.12.free/amcharts/plugins/export/export.min.js"></script>
+    <link rel="stylesheet" href="amcharts_3.20.12.free/amcharts/plugins/export/export.css" type="text/css" media="all" />
+    <!-- <script src="amchart/none.js"></script> -->
+    <!-- Chart code -->
+    <script>
+    var chart = AmCharts.makeChart( "chartdiv", {
+      "type": "serial",
+      "theme": "light",
+      "zoomOutButton": {
+        "backgroundColor": '#000000',
+        "backgroundAlpha": 0.15
+      },
+      "dataProvider": [],
+      "categoryField": "date",
+      "categoryAxis": {
+        "parseDates": true,
+        "minPeriod": "fff",
+        "dashLength": 1,
+        "gridAlpha": 0.15,
+        "axisColor": "#DADADA"
+      },
+      "graphs": [ {
+        "id": "g1",
+        "valueField": "ch0",
+        "type": "smoothedLine"
+        // "bullet": "round",
+        // "bulletBorderColor": "#FFFFFF",
+        // "bulletBorderThickness": 2,
+        // "lineThickness": 2,
+        // "lineColor": "#b5030d",
+        // "negativeLineColor": "#0352b5",
+        // "hideBulletsCount": 50
+      },{
+        "id": "g2",
+        "valueField": "ch1",
+        "type": "smoothedLine"
+        // "bullet": "round",
+        // "bulletBorderColor": "#FFFFFF",
+        // "bulletBorderThickness": 2,
+        // "lineThickness": 2,
+        // "lineColor": "#b5030d",
+        // "negativeLineColor": "#0352b5",
+        // "hideBulletsCount": 50
+      } ],
+      "chartCursor": {
+        "cursorPosition": "mouse"
+      },
+      "chartScrollbar": {
+        "graph": "g1",
+        "scrollbarHeight": 40,
+        "color": "#FFFFFF",
+        "autoGridCount": true
+      },
+      "dataDateFormat": "MM/DD/YYYY JJ:NN:SS:QQQ"
+    } );
+
+    // chart.addListener("rendered", zoomChart);
+    //
+    // if(chart.zoomChart){
+    //   chart.zoomChart();
+    // }
+    //
+    function zoomChart(){
+        chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.4), Math.round(chart.dataProvider.length * 0.55));
+    }
+
+    var chartData = [];
+    var vRef = [];
+    function readCSVFile() {
+      var fileUpload = document.getElementById("fileInput");
+      var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.TXT)$/;
+      if (regex.test(fileUpload.value.toUpperCase())) {
+          if (typeof (FileReader) !== "undefined") {
+              var reader = new FileReader();
+			  chart.dataProvider = [];
+			  chart.validateData();
+              reader.onload = function (e) {
+                  var rows = e.target.result.split("\n");
+                  // console.log(rows[i]);
+                  for (var i = 1; i < rows.length-1; i++) {
+                    var cells = rows[i].split(",");
+                    if(i === 1){
+                      vRef[0] = parseInt(cells[1]);
+                      vRef[1] = parseInt(cells[2]);
+                    }else{
+                      // console.log(cells);
+                      var date = cells[0];
+                      var ch0 = (vRef[0] - parseInt(cells[1]))/66;
+                      var ch1 = (vRef[1] - parseInt(cells[2]))/66;
+                      chart.dataProvider.push( {
+                        "date": AmCharts.stringToDate(date, "MM/DD/YYYY JJ:NN:SS:QQQ"),
+                        "ch0": ch0,
+                        "ch1": ch1
+                      } );
+                    }
+                    // chart.dataProvider.push(dict);
+                    // chart.validateData();
+                  }
+                  chart.validateData();
+                  chart.addListener("rendered", zoomChart);
+              }
+
+              reader.readAsText(fileUpload.files[0]);
+          } else {
+              alert("This browser does not support HTML5.");
+          }
+        } else {
+            alert("Please upload a valid CSV file.");
+        }
+        alert("Upload file success.");
+      }
+    </script>
+
+  </head>
+  <body>
+    <div class="row">
+      <div class="col">
+        <h2>File</h2>
+        <input type="file" id="fileInput">
+        <button type="button" class="btn btn-success" onClick="readCSVFile()">upload file</button>
+      </div>
+    </div>
+    <div id="chartdiv"></div>
+  </body>
+</html>
